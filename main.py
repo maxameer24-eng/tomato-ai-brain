@@ -69,3 +69,25 @@ async def predict(file: UploadFile = File(...)):
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
+    # Create a storage spot for the ESP32
+last_status = {"command": 0}
+
+@app.get("/esp32-check")
+async def esp32_check():
+    return last_status
+
+# Update your existing predict function to save the result
+@app.post("/predict")
+async def predict(file: UploadFile = File(...)):
+    # ... (keep all your existing image processing code) ...
+    
+    # ADD THIS LINE right before the 'return' statement:
+    global last_status
+    last_status = {"command": 1 if info["status"] != "HEALTHY" else 0}
+    
+    return {
+        "disease": clean_name.title(),
+        "status": info["status"],
+        "solution": info["solution"],
+        "confidence": confidence
+    }
